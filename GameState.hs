@@ -4,7 +4,9 @@ module GameState
     getHitsAndMisses,
     getRights,
     getWrongs,
-    printState
+    printState,
+    gameWon,
+    gameLost
 )
 where
 
@@ -34,3 +36,9 @@ getWrongs = snd . getHitsAndMisses
 
 getRights :: GameState -> [Char]
 getRights = fst . getHitsAndMisses
+
+gameWon :: GameState -> Bool
+gameWon state = length (word state) == length (getRights state)
+
+gameLost :: GameState -> Bool
+gameLost state = remainigGuesses state <= 0

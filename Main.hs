@@ -2,6 +2,7 @@ import System.Random
 import System.Exit
 import Control.Monad 
 import Data.Char
+import Data.Maybe
 import GameState
 
 main :: IO ()
@@ -11,23 +12,24 @@ main = do
 
 gameLoop :: GameState -> IO ()
 gameLoop state = do
-    when (remainigGuesses state <= 0) $ do
-        putStrLn "You ran out of guesses"
-        exitSuccess
-
-    when ((length $ word state) == (length $ getRights state)) $ do
-        putStrLn "Word guessed! Play again? (y/n)"
-        (c:_) <- map toLower <$> getLine
-        if c == 'n' then
+    when (gameLost state) $ do
+        answer <- promptRestart "You ran out of guesses!"
+        if answer then do 
+            newWord <- getRandomWord
+            gameLoop (GameState newWord [] 5)
+        else 
             exitSuccess
-        else if c == 'y' then do
-            word <- getRandomWord
-            gameLoop (GameState word [] 5)
-        else
-            gameLoop state
+
+    when (gameWon state) $ do
+        answer <- promptRestart "Word guessed!"
+        if answer then
+            exitSuccess
+        else do
+            newWord <- getRandomWord
+            gameLoop (GameState newWord [] 5)
 
     printState state
-    (c:_) <- getLine
+    (c:_) <- map toLower <$> getLine
     let misses = if c `notElem` word state then 1 else 0
     gameLoop $ state {guessed = c:guessed state, remainigGuesses = remainigGuesses state - misses}
 
@@ -36,4 +38,13 @@ getRandomWord = do
     words <- lines <$> readFile "words.txt"
     index <- randomRIO (0, length words -1)
 
-    return $ words !! index
+    return $ map toLower (words !! index)
+
+promptRestart :: String -> IO Bool
+promptRestart msg = do
+    putStrLn (msg ++ "\nPress y to restart or anything else to quit")
+    (c:_) <- map toLower <$> getLine
+    return $ validateRestartPrompt c
+
+validateRestartPrompt :: Char -> Bool
+validateRestartPrompt c = not (c `notElem` "yn") && c=='y'
