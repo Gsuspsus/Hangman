@@ -1,0 +1,6 @@
+cat
+hat
+mat
+sat
+flat
+fat
