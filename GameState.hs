@@ -1,6 +1,6 @@
 module GameState
 (
-    GameState (GameState, word, guessed, remainigGuesses),
+    GameState (GameState, word, guessed, lives),
     getHitsAndMisses,
     getRights,
     getWrongs,
@@ -16,13 +16,13 @@ import Control.Monad
 data GameState = GameState { 
     word :: String, 
     guessed :: [Char],
-    remainigGuesses :: Int
+    lives :: Int
     } 
 
 printState :: GameState -> IO ()
 printState state = do
-    putStr "Remaining guesses: "
-    print $ remainigGuesses state
+    putStr "Lives: "
+    print $ lives state - length (getWrongs state)
     let guessedChars = getWrongs state
     unless (null guessedChars) $ putStrLn ("You've already guessed: " ++ intersperse ',' guessedChars) 
     let secretWord = [if c `elem` guessed state then c else '_' | c <- word state]
@@ -41,4 +41,4 @@ gameWon :: GameState -> Bool
 gameWon state = length (word state) == length (getRights state)
 
 gameLost :: GameState -> Bool
-gameLost state = remainigGuesses state <= 0
+gameLost state = lives state == length (getWrongs state)
