@@ -13,16 +13,16 @@ main = do
 gameLoop :: GameState -> IO ()
 gameLoop state = do
     when (gameLost state) $ do
-        answer <- promptRestart ("You ran out of guesses!" ++ "\nThe Word was " ++ word state)
-        if answer then do 
+        restart <- promptRestart ("You ran out of guesses!" ++ "\nThe Word was " ++ word state)
+        if restart then do 
             newWord <- getRandomWord
             gameLoop (GameState newWord [] 5)
         else 
             exitSuccess
 
     when (gameWon state) $ do
-        answer <- promptRestart "Word guessed!"
-        if answer then
+        restart <- promptRestart "Word guessed!"
+        if not restart then
             exitSuccess
         else do
             newWord <- getRandomWord
@@ -30,7 +30,7 @@ gameLoop state = do
 
     printState state
     (c:_) <- map toLower <$> getLine
-    if c `notElem` word state && c `notElem` getWrongs state then
+    if c `notElem` guessed state then
         gameLoop $ state {guessed = c:guessed state}
     else
         gameLoop state
