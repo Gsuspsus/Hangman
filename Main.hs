@@ -5,22 +5,24 @@ import Data.Char
 import Data.Maybe
 import GameState
 
+hangmanWords :: IO [String]
+hangmanWords = words <$> readFile "words.txt"
+
 main :: IO ()
 main = do
-    word <- getRandomWord
-    gameLoop (GameState word [] 5)
+    newGame
 
 gameLoop :: GameState -> IO ()
 gameLoop state = do
     when (gameLost state) $ do
-        newGame <- promptRestart ("You ran out of guesses!" ++ "\nThe Word was " ++ word state)
-        if newGame then restart
+        restart <- promptRestart ("You ran out of guesses!" ++ "\nThe Word was " ++ word state)
+        if restart then newGame 
         else exitSuccess
 
     when (gameWon state) $ do
-        newGame <- promptRestart "Word guessed!"
-        if not newGame then exitSuccess
-        else restart
+        restart <- promptRestart "Word guessed!"
+        if not restart then exitSuccess
+        else newGame
 
     printState state
     (c:_) <- map toLower <$> getLine
@@ -29,17 +31,17 @@ gameLoop state = do
     else
         gameLoop state
 
-    where 
-        restart = do
-            newWord <- getRandomWord
-            gameLoop (GameState newWord [] 5)
+newGame :: IO ()
+newGame = do
+    gen <- newStdGen
+    words <- hangmanWords
+    let word = getRandomWord gen words
+    gameLoop (GameState word [] 5)
 
-getRandomWord :: IO String
-getRandomWord = do
-    words <- lines <$> readFile "words.txt"
-    index <- randomRIO (0, length words -1)
-
-    return $ map toLower (words !! index)
+getRandomWord :: StdGen -> [String] -> String
+getRandomWord gen words = do
+    let index = fst $ randomR (0, length words -1) gen
+    map toLower (words !! index)
 
 promptRestart :: String -> IO Bool
 promptRestart msg = do
