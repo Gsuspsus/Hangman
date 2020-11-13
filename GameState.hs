@@ -38,7 +38,7 @@ getRights :: GameState -> [Char]
 getRights = fst . getHitsAndMisses
 
 gameWon :: GameState -> Bool
-gameWon state = length (word state) == length (getRights state)
+gameWon state = all (`elem` guessed state) $ word state
 
 gameLost :: GameState -> Bool
 gameLost state = lives state == length (getWrongs state)

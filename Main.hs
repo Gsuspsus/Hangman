@@ -4,6 +4,7 @@ import Control.Monad
 import Data.Char
 import Data.Maybe
 import GameState
+import Difficulty
 
 hangmanWords :: IO [String]
 hangmanWords = words <$> readFile "words.txt"
@@ -20,6 +21,7 @@ gameLoop state = do
         else exitSuccess
 
     when (gameWon state) $ do
+        printState state
         restart <- promptRestart "Word guessed!"
         if not restart then exitSuccess
         else newGame
@@ -35,13 +37,16 @@ newGame :: IO ()
 newGame = do
     gen <- newStdGen
     words <- hangmanWords
-    let word = getRandomWord gen words
-    gameLoop (GameState word [] 5)
+    dif <- readDifficulty
+    let word = getRandomWord gen words (getWordCriteria dif)
+    let lives = calculateLives dif word
+    gameLoop (GameState word [] lives)
 
-getRandomWord :: StdGen -> [String] -> String
-getRandomWord gen words = do
-    let index = fst $ randomR (0, length words -1) gen
-    map toLower (words !! index)
+getRandomWord :: StdGen -> [String] -> Criteria -> String
+getRandomWord gen words criteria = do
+    let filteredWords = filter criteria words
+    let index = fst $ randomR (0, length filteredWords-1) gen
+    map toLower (filteredWords !! index)
 
 promptRestart :: String -> IO Bool
 promptRestart msg = do
