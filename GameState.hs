@@ -29,7 +29,7 @@ printState state = do
     putStrLn secretWord
 
 getHitsAndMisses :: GameState -> ([Char], [Char])
-getHitsAndMisses state = partition (`elem` word state) $ guessed state
+getHitsAndMisses (GameState w gs l) = partition (`elem` w) gs
 
 getWrongs :: GameState -> [Char]
 getWrongs = snd . getHitsAndMisses
@@ -38,7 +38,7 @@ getRights :: GameState -> [Char]
 getRights = fst . getHitsAndMisses
 
 gameWon :: GameState -> Bool
-gameWon state = all (`elem` guessed state) $ word state
+gameWon (GameState w gs l) = all (`elem` gs) w
 
 gameLost :: GameState -> Bool
-gameLost state = lives state == length (getWrongs state)
+gameLost state@(GameState w gs l) = l == length (getWrongs state)
